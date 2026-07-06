@@ -423,32 +423,70 @@
     const loader = $("#radar-loader");
     const arso = CONFIG.arso;
     const key = `${type}${mode === "latest" ? "Latest" : "Animation"}`;
-    const baseUrl = arso[key];
+    const sourceUrl = arso[key];
 
     loader.hidden = false;
-    image.alt = type === "rain" ? "ARSO radarska slika padavin" : "ARSO prikaz verjetnosti toče";
-    image.onload = () => { loader.hidden = true; };
-    image.onerror = () => {
+    loader.textContent = "Nalagam ARSO radar …";
+    image.hidden = true;
+    image.alt = type === "rain"
+      ? "ARSO radarska slika padavin"
+      : "ARSO prikaz verjetnosti toče";
+
+    window.clearTimeout(updateRadar.timeoutId);
+
+    const finishWithError = () => {
+      image.onload = null;
+      image.onerror = null;
+      image.hidden = true;
       loader.hidden = false;
-      loader.textContent = "Slike trenutno ni mogoče prikazati. Odpri jo neposredno pri ARSO.";
+      loader.textContent =
+        "ARSO slike trenutno ni mogoče prikazati. Klikni »Odpri pri ARSO«.";
     };
-    image.src = `${baseUrl}?v=${Date.now()}`;
+
+    image.onload = () => {
+      window.clearTimeout(updateRadar.timeoutId);
+      image.hidden = false;
+      loader.hidden = true;
+    };
+
+    image.onerror = finishWithError;
+    updateRadar.timeoutId = window.setTimeout(finishWithError, 12000);
+
+    // Uporabi točen uradni URL brez dodatnih query parametrov.
+    // Nekateri ARSO strežniki imajo težave z dodatkom ?v=...
+    image.src = "";
+    window.requestAnimationFrame(() => {
+      image.src = sourceUrl;
+    });
 
     const isRain = type === "rain";
     setText("#radar-title", isRain ? "PADAVINSKI RADAR" : "VERJETNOST TOČE");
     setText("#radar-description", mode === "animation"
-      ? (isRain ? "Animacija zadnjih 90 minut." : "Animacija trenutnega razvoja verjetnosti toče.")
-      : (isRain ? "Najnovejša sestavljena radarska slika." : "Najnovejši prikaz verjetnosti toče."));
+      ? (isRain
+          ? "Animacija zadnjih 90 minut."
+          : "Animacija trenutnega razvoja verjetnosti toče.")
+      : (isRain
+          ? "Najnovejša sestavljena radarska slika."
+          : "Najnovejši prikaz verjetnosti toče."));
+
     const source = $("#radar-source-link");
     source.href = isRain ? arso.rainPage : arso.hailPage;
 
     const legend = $("#radar-legend");
     if (isRain) {
       legend.className = "radar-legend rain-legend";
-      legend.innerHTML = '<span><i class="legend-blue"></i>Rahlo</span><span><i class="legend-green"></i>Zmerno</span><span><i class="legend-yellow"></i>Močno</span><span><i class="legend-red"></i>Zelo močno</span><span><i class="legend-purple"></i>Verjetna toča</span>';
+      legend.innerHTML =
+        '<span><i class="legend-blue"></i>Rahlo</span>' +
+        '<span><i class="legend-green"></i>Zmerno</span>' +
+        '<span><i class="legend-yellow"></i>Močno</span>' +
+        '<span><i class="legend-red"></i>Zelo močno</span>' +
+        '<span><i class="legend-purple"></i>Verjetna toča</span>';
     } else {
       legend.className = "radar-legend hail-legend";
-      legend.innerHTML = '<span><i></i>Majhna verjetnost</span><span><i></i>Srednja verjetnost</span><span><i></i>Velika verjetnost</span>';
+      legend.innerHTML =
+        '<span><i></i>Majhna verjetnost</span>' +
+        '<span><i></i>Srednja verjetnost</span>' +
+        '<span><i></i>Velika verjetnost</span>';
     }
   }
 

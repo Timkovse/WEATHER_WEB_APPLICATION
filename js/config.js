@@ -15,11 +15,11 @@ window.APP_CONFIG = Object.freeze({
   trendWindowMinutes: 180,
 
   arso: Object.freeze({
-    rainLatest: "https://meteo.arso.gov.si/uploads/probase/www/observ/radar/si0-rm.gif",
-    rainAnimation: "https://meteo.arso.gov.si/uploads/probase/www/observ/radar/si0-rm-anim.gif",
-    rainPage: "https://meteo.arso.gov.si/met/sl/weather/observ/radar/",
-    hailLatest: "https://meteo.arso.gov.si/uploads/probase/www/warning/graphic/warning_hp_pda_latest.gif",
-    hailAnimation: "https://meteo.arso.gov.si/uploads/probase/www/warning/graphic/warning_hp_pda_anim.gif",
-    hailPage: "https://meteo.arso.gov.si/pda/warning/hail/hpanim/"
+    rainLatest: "https://www.meteo.si/uploads/probase/www/observ/radar/si0-rm.gif",
+    rainAnimation: "https://www.meteo.si/uploads/probase/www/observ/radar/si0-rm-anim.gif",
+    rainPage: "https://www.meteo.si/met/sl/weather/observ/radar/",
+    hailLatest: "https://www.meteo.si/uploads/probase/www/warning/graphic/warning_hp_pda_latest.gif",
+    hailAnimation: "https://www.meteo.si/uploads/probase/www/warning/graphic/warning_hp_pda_anim.gif",
+    hailPage: "https://www.meteo.si/pda/warning/hail/hpanim/"
   })
 });
