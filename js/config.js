@@ -9,7 +9,7 @@ window.APP_CONFIG = Object.freeze({
   stationStartDate: "2026-07-06",
 
   thingSpeakChannelId: "3422725",
-  thingSpeakReadApiKey: "",
+  thingSpeakReadApiKey: "LNUPSJO0L6AHYDAX",
 
   refreshIntervalMs: 60 * 1000,
   trendWindowMinutes: 180,
