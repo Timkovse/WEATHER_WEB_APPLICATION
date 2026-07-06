@@ -1,4 +1,4 @@
-const CACHE_NAME = "vremenska-postaja-v12";
+const CACHE_NAME = "vremenska-postaja-v6";
 const APP_SHELL = [
   "./",
   "./index.html",
