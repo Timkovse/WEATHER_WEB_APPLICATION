@@ -13,7 +13,7 @@
     forecast: null,
     trend: null,
     radarType: "rain",
-    radarMode: "animation",
+    radarMode: "latest",
     historyRange: 1,
     historyMetric: "temperature",
     historyData: [],
@@ -450,7 +450,7 @@
     };
 
     image.onerror = finishWithError;
-    updateRadar.timeoutId = window.setTimeout(finishWithError, 12000);
+    updateRadar.timeoutId = window.setTimeout(finishWithError, 45000);
 
     // Uporabi točen uradni URL brez dodatnih query parametrov.
     // Nekateri ARSO strežniki imajo težave z dodatkom ?v=...
