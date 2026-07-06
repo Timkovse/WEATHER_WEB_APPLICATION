@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="sl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1320">
+  <meta name="description" content="Lokalna vremenska postaja Kidričevo z meritvami ESP32, napovedjo, radarjem in zgodovino.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Postaja">
+
+  <title>Vremenska postaja Kidričevo</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="status-banner" class="status-banner" hidden role="status"></div>
+
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="kicker">OSEBNA VREMENSKA POSTAJA</p>
+        <h1>Kidričevo</h1>
+        <p class="topbar-meta"><span class="live-dot" id="station-dot"></span><span id="station-status">Povezovanje …</span></p>
+      </div>
+      <button id="refresh-button" class="icon-button" type="button" aria-label="Osveži podatke" title="Osveži podatke">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8.1 8.1 0 1 0-2.4 5.8M20 4v7h-7"/></svg>
+      </button>
+    </header>
+
+    <main class="main-content">
+      <section id="tab-current" class="tab-panel active" data-panel="current" aria-labelledby="nav-current">
+        <div class="section-heading">
+          <div>
+            <p class="kicker">TRENUTNO</p>
+            <h2>Lokalna meritev in vremenski portal</h2>
+          </div>
+          <p id="current-updated" class="muted mono">Nalagam …</p>
+        </div>
+
+        <div class="current-grid">
+          <article class="primary-weather-card">
+            <div class="card-source-row">
+              <div>
+                <p class="source-label">MOJA POSTAJA</p>
+                <p class="source-detail">ESP32 · AHT20 · BMP280</p>
+              </div>
+              <span id="local-freshness" class="status-pill">Nalagam</span>
+            </div>
+
+            <div class="temperature-display">
+              <span id="local-temp">--</span><span>°C</span>
+            </div>
+
+            <div class="metric-row three">
+              <div><span>Vlaga</span><strong><span id="local-humidity">--</span>%</strong></div>
+              <div><span>Tlak</span><strong><span id="local-pressure">--</span> hPa</strong></div>
+              <div><span>Rosišče</span><strong><span id="local-dewpoint">--</span>°C</strong></div>
+            </div>
+
+            <div class="local-secondary">
+              <div><span>Občutek</span><strong><span id="local-feels">--</span>°C</strong></div>
+              <div><span>Zadnja meritev</span><strong id="local-time">--</strong></div>
+            </div>
+          </article>
+
+          <article class="portal-card">
+            <div class="card-source-row">
+              <div>
+                <p class="source-label">OPEN-METEO</p>
+                <p class="source-detail">Vremenski model za isto lokacijo</p>
+              </div>
+              <span id="portal-weather-icon" class="weather-symbol" aria-hidden="true">—</span>
+            </div>
+
+            <div class="portal-title-row">
+              <div>
+                <div class="portal-temperature"><span id="portal-temp">--</span><span>°C</span></div>
+                <p id="portal-condition" class="condition-text">Nalagam …</p>
+              </div>
+              <div class="portal-side">
+                <span>Občutek</span>
+                <strong><span id="portal-feels">--</span>°C</strong>
+              </div>
+            </div>
+
+            <div class="portal-metrics">
+              <div><span>Vlaga</span><strong><span id="portal-humidity">--</span>%</strong></div>
+              <div><span>Tlak</span><strong><span id="portal-pressure">--</span> hPa</strong></div>
+              <div><span>Veter</span><strong><span id="portal-wind">--</span> km/h</strong></div>
+              <div><span>Sunki</span><strong><span id="portal-gust">--</span> km/h</strong></div>
+              <div><span>Padavine</span><strong><span id="portal-rain">--</span> mm</strong></div>
+              <div><span>Oblačnost</span><strong><span id="portal-cloud">--</span>%</strong></div>
+            </div>
+          </article>
+        </div>
+
+        <article class="comparison-card">
+          <div class="card-title-row">
+            <div>
+              <p class="source-label">PRIMERJAVA</p>
+              <h3>Razlika: postaja − portal</h3>
+            </div>
+            <span class="info-note">Lokalni mikroklimatski odklon</span>
+          </div>
+          <div class="comparison-grid">
+            <div><span>Temperatura</span><strong id="diff-temp">--</strong></div>
+            <div><span>Vlaga</span><strong id="diff-humidity">--</strong></div>
+            <div><span>Tlak</span><strong id="diff-pressure">--</strong></div>
+          </div>
+        </article>
+
+        <article class="trend-card">
+          <div class="trend-visual">
+            <svg class="barometer" viewBox="0 0 220 135" role="img" aria-label="Trend zračnega tlaka">
+              <path d="M25 108 A85 85 0 0 1 195 108" class="gauge-base"/>
+              <path d="M25 108 A85 85 0 0 1 110 23" class="gauge-falling"/>
+              <path d="M110 23 A85 85 0 0 1 195 108" class="gauge-rising"/>
+              <g id="barometer-needle" class="gauge-needle">
+                <line x1="110" y1="108" x2="110" y2="42"/>
+                <circle cx="110" cy="108" r="7"/>
+              </g>
+            </svg>
+          </div>
+          <div class="trend-copy">
+            <p class="source-label">3-URNI TREND TLAKA</p>
+            <h3 id="trend-label">Zbiram podatke …</h3>
+            <p id="trend-detail" class="muted">Za zanesljiv trend so potrebne meritve skozi daljše obdobje.</p>
+          </div>
+        </article>
+      </section>
+
+      <section id="tab-radar" class="tab-panel" data-panel="radar" aria-labelledby="nav-radar" hidden>
+        <div class="section-heading">
+          <div>
+            <p class="kicker">ARSO</p>
+            <h2>Radar padavin in verjetnost toče</h2>
+          </div>
+          <button id="radar-refresh" class="text-button" type="button">Osveži sliko</button>
+        </div>
+
+        <div class="segmented-control" role="tablist" aria-label="Vrsta radarja">
+          <button class="segment active" type="button" data-radar-type="rain">Padavine</button>
+          <button class="segment" type="button" data-radar-type="hail">Toča</button>
+        </div>
+        <div class="segmented-control secondary" role="tablist" aria-label="Način prikaza radarja">
+          <button class="segment active" type="button" data-radar-mode="animation">Animacija</button>
+          <button class="segment" type="button" data-radar-mode="latest">Zadnja slika</button>
+        </div>
+
+        <article class="radar-card">
+          <div class="radar-frame">
+            <div id="radar-loader" class="image-loader">Nalagam ARSO radar …</div>
+            <img id="radar-image" alt="ARSO radarska slika padavin" referrerpolicy="no-referrer">
+          </div>
+          <div class="radar-caption">
+            <div>
+              <p id="radar-title" class="source-label">PADAVINSKI RADAR</p>
+              <p id="radar-description" class="muted">Animacija zadnjih 90 minut.</p>
+            </div>
+            <a id="radar-source-link" class="source-link" href="https://meteo.arso.gov.si/met/sl/weather/observ/radar/" target="_blank" rel="noopener">Odpri pri ARSO ↗</a>
+          </div>
+        </article>
+
+        <article class="legend-card">
+          <p class="source-label">KAKO BRATI PRIKAZ</p>
+          <div id="radar-legend" class="radar-legend rain-legend">
+            <span><i class="legend-blue"></i>Rahlo</span>
+            <span><i class="legend-green"></i>Zmerno</span>
+            <span><i class="legend-yellow"></i>Močno</span>
+            <span><i class="legend-red"></i>Zelo močno</span>
+            <span><i class="legend-purple"></i>Verjetna toča</span>
+          </div>
+          <p class="legal-note">Vir podatkov in slik: ARSO. Čas na radarski sliki je lahko podan v UTC.</p>
+        </article>
+      </section>
+
+      <section id="tab-forecast" class="tab-panel" data-panel="forecast" aria-labelledby="nav-forecast" hidden>
+        <div class="section-heading">
+          <div>
+            <p class="kicker">7 DNI</p>
+            <h2>Vremenska napoved</h2>
+          </div>
+          <p class="muted mono">Vir: Open-Meteo</p>
+        </div>
+
+        <div id="forecast-days" class="forecast-days" aria-label="Sedemdnevna napoved">
+          <div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div>
+        </div>
+
+        <article class="forecast-detail-card">
+          <div class="card-title-row">
+            <div>
+              <p class="source-label">URNA NAPOVED</p>
+              <h3 id="forecast-detail-title">Izberi dan</h3>
+            </div>
+            <p id="forecast-detail-summary" class="muted"></p>
+          </div>
+          <div id="hourly-forecast" class="hourly-forecast">
+            <p class="empty-state">Podrobnosti se prikažejo po izbiri dneva.</p>
+          </div>
+        </article>
+      </section>
+
+      <section id="tab-history" class="tab-panel" data-panel="history" aria-labelledby="nav-history" hidden>
+        <div class="section-heading">
+          <div>
+            <p class="kicker">ARHIV POSTAJE</p>
+            <h2>Zgodovina meritev</h2>
+          </div>
+          <button id="download-csv" class="text-button" type="button" disabled>CSV ↓</button>
+        </div>
+
+        <div class="segmented-control history-range" role="tablist" aria-label="Obdobje zgodovine">
+          <button class="segment active" type="button" data-history-range="1">24 ur</button>
+          <button class="segment" type="button" data-history-range="7">7 dni</button>
+          <button class="segment" type="button" data-history-range="31">31 dni</button>
+        </div>
+
+        <div class="segmented-control secondary metric-control" role="tablist" aria-label="Meritev na grafu">
+          <button class="segment active" type="button" data-history-metric="temperature">Temperatura</button>
+          <button class="segment" type="button" data-history-metric="humidity">Vlaga</button>
+          <button class="segment" type="button" data-history-metric="pressure">Tlak</button>
+        </div>
+
+        <div class="history-summary">
+          <article><span>Minimum</span><strong id="history-min">--</strong></article>
+          <article><span>Povprečje</span><strong id="history-avg">--</strong></article>
+          <article><span>Maksimum</span><strong id="history-max">--</strong></article>
+          <article><span>Vzorcev</span><strong id="history-count">--</strong></article>
+        </div>
+
+        <article class="chart-card">
+          <div class="chart-title-row">
+            <div>
+              <p id="history-chart-kicker" class="source-label">TEMPERATURA</p>
+              <h3 id="history-chart-title">Zadnjih 24 ur</h3>
+            </div>
+            <p id="history-chart-unit" class="chart-unit">°C</p>
+          </div>
+          <div id="history-chart" class="history-chart" aria-live="polite">
+            <div class="chart-loading">Nalagam zgodovino …</div>
+          </div>
+          <p id="history-note" class="legal-note">Podatki so časovno povprečeni, da je graf pregleden.</p>
+        </article>
+      </section>
+
+      <section id="tab-year" class="tab-panel" data-panel="year" aria-labelledby="nav-year" hidden>
+        <div class="section-heading">
+          <div>
+            <p class="kicker">VREMENSKI LETOPIS</p>
+            <h2>Zadnjih 12 mesecev</h2>
+          </div>
+          <p id="year-period" class="muted mono">Nalagam …</p>
+        </div>
+
+        <article class="year-progress-card">
+          <div class="progress-copy">
+            <div>
+              <p class="source-label">POKRITOST ARHIVA</p>
+              <h3><span id="year-completeness">0</span>% dni z meritvami</h3>
+            </div>
+            <strong id="year-days-count">0 / 365</strong>
+          </div>
+          <div class="progress-track"><div id="year-progress" class="progress-bar"></div></div>
+          <p id="year-availability-note" class="legal-note">Lokalna postaja lahko prikaže samo podatke od začetka merjenja.</p>
+        </article>
+
+        <article class="heatmap-card">
+          <div class="card-title-row">
+            <div>
+              <p class="source-label">TEMPERATURNI KOLEDAR</p>
+              <h3>Dnevna povprečja</h3>
+            </div>
+            <div class="heat-legend" aria-label="Barvna lestvica temperature">
+              <i class="heat-1"></i><i class="heat-2"></i><i class="heat-3"></i><i class="heat-4"></i><i class="heat-5"></i>
+            </div>
+          </div>
+          <div class="heatmap-scroll">
+            <div class="weekday-labels"><span>P</span><span></span><span>S</span><span></span><span>P</span><span></span><span>N</span></div>
+            <div id="year-heatmap" class="year-heatmap" aria-label="Koledar dnevnih povprečnih temperatur">
+              <p class="empty-state">Nalagam letne podatke …</p>
+            </div>
+          </div>
+        </article>
+
+        <div id="year-records" class="year-records">
+          <article><span>Najtoplejše dnevno povprečje</span><strong id="record-warmest">--</strong><small id="record-warmest-date">--</small></article>
+          <article><span>Najhladnejše dnevno povprečje</span><strong id="record-coldest">--</strong><small id="record-coldest-date">--</small></article>
+          <article><span>Najbolj vlažen dan</span><strong id="record-humid">--</strong><small id="record-humid-date">--</small></article>
+          <article><span>Najnižji povprečni tlak</span><strong id="record-pressure">--</strong><small id="record-pressure-date">--</small></article>
+        </div>
+
+        <article class="monthly-card">
+          <div class="card-title-row">
+            <div>
+              <p class="source-label">PREGLED PO MESECIH</p>
+              <h3>Povprečja lokalne postaje</h3>
+            </div>
+          </div>
+          <div id="monthly-summary" class="monthly-summary">
+            <p class="empty-state">Nalagam mesečni pregled …</p>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Glavna navigacija">
+      <button id="nav-current" class="nav-button active" type="button" data-tab="current">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v2m0 14v2M4.2 4.2l1.4 1.4m12.8 12.8 1.4 1.4M3 12h2m14 0h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/><circle cx="12" cy="12" r="4"/></svg>
+        <span>Trenutno</span>
+      </button>
+      <button id="nav-radar" class="nav-button" type="button" data-tab="radar">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.5A4.5 4.5 0 0 1 7.5 13H8a6 6 0 0 1 11.7 1.8A3.5 3.5 0 0 1 19.5 22H7a4 4 0 0 1-4-4.5Z"/><path d="M8 4h.01M12 2h.01M16 5h.01"/></svg>
+        <span>Radar</span>
+      </button>
+      <button id="nav-forecast" class="nav-button" type="button" data-tab="forecast">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2v3m10-3v3M3.5 9h17M5 4h14a2 2 0 0 1 2 2v14H3V6a2 2 0 0 1 2-2Z"/><path d="m8 15 2 2 5-5"/></svg>
+        <span>Napoved</span>
+      </button>
+      <button id="nav-history" class="nav-button" type="button" data-tab="history">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V9m5 10V5m5 14v-7m5 7V3"/></svg>
+        <span>Zgodovina</span>
+      </button>
+      <button id="nav-year" class="nav-button" type="button" data-tab="year">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4zM8 2v4m8-4v4M4 9h16"/><path d="M8 13h2m4 0h2m-8 4h2m4 0h2"/></svg>
+        <span>Leto</span>
+      </button>
+    </nav>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/weather-calc.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
